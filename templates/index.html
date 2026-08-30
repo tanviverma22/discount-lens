@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiscountLens • AI Business Investigator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
+        
+        :root {
+            --primary: #0f172a;
+        }
+        
+        body {
+            font-family: 'Inter', system_ui, sans-serif;
+        }
+        
+        .font-display {
+            font-family: 'Space Grotesk', 'Inter', sans-serif;
+            font-weight: 600;
+        }
+
+        .metric-card {
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .section-header {
+            font-family: 'Space Grotesk', 'Inter', sans-serif;
+            letter-spacing: -0.025em;
+        }
+
+        .data-table {
+            font-size: 0.875rem;
+        }
+
+        .leakage-row {
+            transition: background-color 0.1s ease;
+        }
+        
+        .leakage-row:hover {
+            background-color: #fef2f2;
+        }
+
+        .agent-message {
+            animation: fadeIn 0.2s ease-out forwards;
+        }
+
+        .nav-active {
+            background-color: #0f172a;
+            color: white;
+            border-radius: 6px;
+        }
+
+        .metric-card {
+            cursor: pointer;
+        }
+
+        .metric-card:focus-visible, .segment-button:focus-visible, button:focus-visible {
+            outline: 3px solid #93c5fd;
+            outline-offset: 2px;
+        }
+
+        .view-panel { display: none; }
+        .view-panel.active { display: block; }
+        .issue-card { border-left: 4px solid #f59e0b; }
+        .audit-signal { min-height: 72px; }
+        .tour-backdrop { background: rgba(15, 23, 42, .58); }
+        .tour-card { box-shadow: 0 24px 70px rgba(15, 23, 42, .22); }
+        .segment-button { cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
+        .segment-button:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(15,23,42,.08); }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .status-ready { background: #10b981; }
+        .status-limited { background: #f59e0b; }
+        .status-unavailable { background: #94a3b8; }
+        @media (max-width: 768px) {
+            .mobile-scroll { overflow-x: auto; white-space: nowrap; }
+            .mobile-scroll > * { display: inline-flex; }
+        }
+
+        .stat-value {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .chart-container {
+            position: relative;
+        }
+
+        .segment-pill {
+            font-size: 0.75rem;
+            padding: 1px 8px;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+
+        .sure-thing { background-color: #dcfce7; color: #166534; }
+        .persuadable { background-color: #dbeafe; color: #1e40af; }
+        .price-warrior { background-color: #fef3c7; color: #92400e; }
+        .lost-cause { background-color: #fee2e2; color: #991b1b; }
+
+        .investigation-card {
+            border-left: 4px solid #0f172a;
+        }
+
+        .policy-input {
+            transition: all 0.1s ease;
+        }
+
+        .policy-input:focus {
+            box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
+        }
+
+        .delta-positive { color: #166534; }
+        .delta-negative { color: #991b1b; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+    <!-- Top Navigation -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-x-3">
+                    <div class="w-9 h-9 bg-slate-900 rounded-xl flex items-center justify-center">
+                        <i class="fa-solid fa-search-dollar text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="font-display text-2xl font-semibold tracking-tighter">Discount Lens</span>
+                        <span class="text-[10px] font-mono bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded ml-1 align-super">AGENT</span>
+                    </div>
+                </div>
+                <div class="mobile-scroll flex items-center gap-x-1 text-xs font-medium">
+                    <button class="nav-link px-3 py-2" data-view="overview" onclick="showView('overview')">Overview</button>
+                    <button class="nav-link px-3 py-2" data-view="revenue-agent" onclick="showView('revenue-agent')">Revenue Agent</button>
+                    <button class="nav-link px-3 py-2" data-view="audit" onclick="showView('audit')">Agent Audit</button>
+                    <button class="nav-link px-3 py-2" data-view="segments" onclick="showView('segments')">Segments</button>
+                    <button class="nav-link px-3 py-2" data-view="leakage" onclick="showView('leakage')">Leakage</button>
+                    <button class="nav-link px-3 py-2" data-view="explorer" onclick="showView('explorer')">Data Explorer</button>
+                    <button class="nav-link px-3 py-2" data-view="datasets" onclick="showView('datasets')">Datasets</button>
+                    <button class="nav-link px-3 py-2" data-view="simulator" onclick="showView('simulator')">Simulator</button>
+                </div>
+                <div class="flex items-center gap-x-2">
+                    <button id="sample-link" onclick="window.open('/dataset', '_blank', 'noopener,noreferrer')" class="hidden md:flex items-center gap-x-2 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-medium hover:bg-emerald-100 transition-colors" title="Open the sample dataset in a new tab">
+                        <i class="fa-solid fa-table"></i><span>Connected to sample data</span>
+                    </button>
+                    <button onclick="startTour()" class="w-8 h-8 rounded-xl border border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-50" title="Replay product tour">?</button>
+                    <button onclick="document.getElementById('csv-upload').click()" class="flex items-center gap-x-2 px-4 py-2 text-sm font-medium bg-slate-900 text-white hover:bg-slate-800 rounded-xl transition-colors">
+                        <i class="fa-solid fa-upload text-xs"></i><span class="hidden sm:inline">Upload CSV</span>
+                    </button>
+                    <input type="file" id="csv-upload" accept=".csv" class="hidden" onchange="handleFileUpload(event)">
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-end justify-between">
+                <div>
+                    <h1 class="font-display text-4xl font-semibold tracking-tighter">Discount Leakage Investigator</h1>
+                    <p class="text-slate-600 mt-1">Find customers who received discounts but would have purchased anyway.</p>
+                </div>
+                <div class="text-right text-xs text-slate-500 font-mono">
+                    <div>ANALYZED <span id="analyzed-at" class="font-medium text-slate-700"></span></div>
+                    <div><span id="customer-count"></span> customers • <span id="transaction-count"></span> transactions</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div id="overview-view" class="view-panel active">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+            <div class="metric-card bg-white border border-slate-200 rounded-2xl p-5">
+                <div class="text-xs font-medium text-slate-500 tracking-widest">TOTAL REVENUE</div>
+                <div class="mt-2 flex items-baseline">
+                    <span id="metric-revenue" class="stat-value text-3xl font-semibold tabular-nums">$0</span>
+                </div>
+                <div class="text-[10px] text-emerald-600 mt-1">from <span id="metric-orders">0</span> orders</div>
+            </div>
+            
+            <div class="metric-card bg-white border border-slate-200 rounded-2xl p-5">
+                <div class="text-xs font-medium text-slate-500 tracking-widest">DISCOUNTS GIVEN</div>
+                <div class="mt-2 flex items-baseline">
+                    <span id="metric-discounts" class="stat-value text-3xl font-semibold tabular-nums">$0</span>
+                </div>
+                <div class="text-[10px] text-amber-600 mt-1"><span id="metric-discount-pct">0</span>% of revenue</div>
+            </div>
+            
+            <div class="metric-card bg-white border border-red-200 rounded-2xl p-5 bg-red-50/30">
+                <div class="flex items-center gap-x-2">
+                    <div class="text-xs font-medium text-red-600 tracking-widest">MARGIN LEAKAGE</div>
+                    <i class="fa-solid fa-exclamation-triangle text-red-500 text-xs"></i>
+                </div>
+                <div class="mt-2 flex items-baseline">
+                    <span id="metric-leakage" class="stat-value text-3xl font-semibold tabular-nums text-red-600">$0</span>
+                </div>
+                <div class="text-[10px] text-red-600 mt-1"><span id="metric-leakage-tx">0</span> unnecessary discounts</div>
+            </div>
+            
+            <div class="metric-card bg-white border border-slate-200 rounded-2xl p-5">
+                <div class="text-xs font-medium text-slate-500 tracking-widest">AVG ORDER VALUE</div>
+                <div class="mt-2 flex items-baseline">
+                    <span id="metric-aov" class="stat-value text-3xl font-semibold tabular-nums">$0</span>
+                </div>
+                <div class="text-[10px] text-slate-500 mt-1">across all segments</div>
+            </div>
+            
+            <div class="metric-card bg-white border border-slate-200 rounded-2xl p-5">
+                <div class="text-xs font-medium text-slate-500 tracking-widest">OPPORTUNITY COST</div>
+                <div class="mt-2 flex items-baseline">
+                    <span id="metric-opportunity" class="stat-value text-3xl font-semibold tabular-nums">$0</span>
+                </div>
+                <div class="text-[10px] text-slate-500 mt-1">revenue given away</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Customer Behavior -->
+            <div class="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-6">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <div class="font-semibold text-lg">Customer Behavior</div>
+                        <div class="text-xs text-slate-500 mt-1">Observed discount exposure and average offer depth by assigned segment</div>
+                    </div>
+                    <span class="text-[10px] px-2 py-1 bg-blue-50 text-blue-700 rounded-full">LIVE DATA</span>
+                </div>
+                <div id="behavior-chart-empty" class="hidden rounded-xl bg-slate-50 text-slate-500 text-sm p-5">Behavior signals are unavailable for this dataset.</div>
+                <div id="behavior-chart-wrap" class="chart-container h-64"><canvas id="behavior-chart"></canvas></div>
+                <div id="behavior-chart-summary" class="mt-4 grid grid-cols-2 gap-3 text-xs"></div>
+            </div>
+
+            <!-- Leakage Sources -->
+            <div class="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="font-semibold text-lg">Top Leakage Sources</div>
+                    <div class="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full font-medium" id="leakage-count-badge"></div>
+                </div>
+                
+                <div id="leakage-sources" class="space-y-2 text-sm"></div>
+            </div>
+
+            <!-- Evidence Table -->
+            <div class="lg:col-span-12 bg-white border border-slate-200 rounded-2xl overflow-hidden">
+                <div class="px-6 pt-5 pb-3 flex items-center justify-between border-b">
+                    <div>
+                        <div class="font-semibold text-lg">Discount Leakage Evidence</div>
+                        <div class="text-xs text-slate-500">Sure Thing customers who received discounts</div>
+                    </div>
+                    <div class="text-xs font-mono text-slate-400">Sorted by discount amount</div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full data-table">
+                        <thead>
+                            <tr class="bg-slate-50 text-xs text-slate-500 border-b">
+                                <th class="text-left px-6 py-3 font-medium">TRANSACTION</th>
+                                <th class="text-left px-4 py-3 font-medium">CUSTOMER</th>
+                                <th class="text-left px-4 py-3 font-medium">SEGMENT</th>
+                                <th class="text-right px-4 py-3 font-medium">BASE VALUE</th>
+                                <th class="text-right px-4 py-3 font-medium">DISCOUNT</th>
+                                <th class="text-left px-4 py-3 font-medium">CHANNEL</th>
+                                <th class="text-left px-6 py-3 font-medium">WHY THIS IS LEAKAGE</th>
+                            </tr>
+                        </thead>
+                        <tbody id="evidence-table" class="divide-y"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- AI Agent Interface -->
+            <div class="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-6 flex flex-col">
+                <div class="flex items-center gap-x-3 mb-4">
+                    <div class="w-8 h-8 bg-slate-900 text-white rounded-xl flex items-center justify-center">
+                        <i class="fa-solid fa-robot text-sm"></i>
+                    </div>
+                    <div>
+                        <div class="font-semibold">AI Business Investigator</div>
+                        <div class="text-[10px] text-emerald-600">Ask anything about the data</div>
+                    </div>
+                </div>
+                
+                <div class="flex-1 min-h-[240px] bg-slate-50 rounded-2xl p-4 overflow-y-auto mb-3 text-sm" id="agent-output">
+                    <div class="text-slate-400 text-xs">Examples:</div>
+                    <div class="flex flex-wrap gap-1 mt-1.5">
+                        <button onclick="askAgentExample('Why are we losing margin?')" 
+                                class="text-xs px-3 py-1 bg-white border border-slate-200 hover:border-slate-300 rounded-full transition-colors">Why are we losing margin?</button>
+                        <button onclick="askAgentExample('Who are the Sure Things?')" 
+                                class="text-xs px-3 py-1 bg-white border border-slate-200 hover:border-slate-300 rounded-full transition-colors">Who are the Sure Things?</button>
+                        <button onclick="askAgentExample('Which channels leak the most?')" 
+                                class="text-xs px-3 py-1 bg-white border border-slate-200 hover:border-slate-300 rounded-full transition-colors">Which channels leak the most?</button>
+                        <button onclick="askAgentExample('What should we change?')" 
+                                class="text-xs px-3 py-1 bg-white border border-slate-200 hover:border-slate-300 rounded-full transition-colors">What should we change?</button>
+                    </div>
+                    <div id="agent-response" class="mt-4 text-slate-700"></div>
+                </div>
+                
+                <div class="flex gap-2">
+                    <input id="agent-question" type="text" 
+                           class="flex-1 border border-slate-200 focus:border-slate-400 rounded-2xl px-4 py-3 text-sm outline-none"
+                           placeholder="Ask: Why are we giving discounts to customers who don't need them?">
+                    <button onclick="askAgent()" 
+                            class="px-6 py-3 bg-slate-900 hover:bg-black text-white rounded-2xl text-sm font-medium flex items-center gap-x-2 transition-colors">
+                        <span>Ask</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Stats + Policy Simulator Teaser -->
+            <div class="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-6">
+                <div class="font-semibold mb-3">Discount Effectiveness by Segment</div>
+                
+                <div id="discount-effectiveness" class="space-y-3 text-sm"></div>
+                
+                <div class="mt-5 pt-4 border-t">
+                    <div class="text-xs text-slate-500 mb-1">KEY INSIGHT</div>
+                    <div id="quick-insight" class="text-sm leading-snug text-slate-700"></div>
+                </div>
+            </div>
+
+            <!-- Policy Simulator -->
+            <div class="lg:col-span-12 bg-white border border-slate-200 rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <div class="font-semibold text-lg flex items-center gap-x-2">
+                            <span>Policy Simulator</span>
+                            <span class="text-xs font-normal px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full">WHAT-IF ANALYSIS</span>
+                        </div>
+                        <div class="text-xs text-slate-500">Simulate the impact of changing discount rules</div>
+                    </div>
+                    <button onclick="runSimulation()" 
+                            class="px-5 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-700 transition-colors text-white rounded-2xl flex items-center gap-x-2">
+                        <i class="fa-solid fa-play text-xs"></i>
+                        <span>Run Simulation</span>
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Current Policy (display) -->
+                    <div>
+                        <div class="text-xs uppercase tracking-widest text-slate-500 mb-2">Current Policy</div>
+                        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm">
+                            <div class="grid grid-cols-3 gap-4 text-center">
+                                <div>
+                                    <div class="text-[10px] text-slate-500">Sure Things</div>
+                                    <div class="font-semibold text-lg" id="current-sure">15-30%</div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] text-slate-500">Persuadables</div>
+                                    <div class="font-semibold text-lg" id="current-pers">15-20%</div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] text-slate-500">Price Warriors</div>
+                                    <div class="font-semibold text-lg" id="current-warrior">20-25%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Proposed Policy -->
+                    <div>
+                        <div class="text-xs uppercase tracking-widest text-slate-500 mb-2">Proposed Policy</div>
+                        <div class="bg-emerald-50/40 border border-emerald-200 rounded-2xl p-4">
+                            <div class="grid grid-cols-3 gap-3">
+                                <div>
+                                    <div class="text-[10px] text-emerald-600 mb-1">Sure Things</div>
+                                    <input id="prop-sure" type="number" value="0" step="0.05" min="0" max="0.5"
+                                           class="policy-input w-full border border-emerald-200 bg-white text-center rounded-xl py-1.5 text-sm font-medium">
+                                </div>
+                                <div>
+                                    <div class="text-[10px] text-emerald-600 mb-1">Persuadables</div>
+                                    <input id="prop-pers" type="number" value="0.15" step="0.05" min="0" max="0.5"
+                                           class="policy-input w-full border border-emerald-200 bg-white text-center rounded-xl py-1.5 text-sm font-medium">
+                                </div>
+                                <div>
+                                    <div class="text-[10px] text-emerald-600 mb-1">Price Warriors</div>
+                                    <input id="prop-warrior" type="number" value="0.22" step="0.05" min="0" max="0.5"
+                                           class="policy-input w-full border border-emerald-200 bg-white text-center rounded-xl py-1.5 text-sm font-medium">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Simulation Results -->
+                <div id="simulation-results" class="hidden mt-6 border-t pt-5">
+                    <div class="font-medium mb-3 text-sm">Simulation Results (Expected Values)</div>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-slate-50 rounded-2xl p-4">
+                            <div class="text-xs text-slate-500">ORDERS</div>
+                            <div class="flex items-baseline gap-x-2 mt-1">
+                                <span id="sim-current-orders" class="font-semibold text-xl"></span>
+                                <span id="sim-delta-orders" class="text-xs font-medium"></span>
+                            </div>
+                            <div class="text-xs text-emerald-600">Proposed: <span id="sim-proposed-orders"></span></div>
+                        </div>
+                        
+                        <div class="bg-slate-50 rounded-2xl p-4">
+                            <div class="text-xs text-slate-500">REVENUE</div>
+                            <div class="flex items-baseline gap-x-2 mt-1">
+                                <span id="sim-current-revenue" class="font-semibold text-xl"></span>
+                                <span id="sim-delta-revenue" class="text-xs font-medium"></span>
+                            </div>
+                            <div class="text-xs text-emerald-600">Proposed: <span id="sim-proposed-revenue"></span></div>
+                        </div>
+                        
+                        <div class="bg-slate-50 rounded-2xl p-4">
+                            <div class="text-xs text-slate-500">DISCOUNT COST</div>
+                            <div class="flex items-baseline gap-x-2 mt-1">
+                                <span id="sim-current-discount" class="font-semibold text-xl"></span>
+                                <span id="sim-delta-discount" class="text-xs font-medium"></span>
+                            </div>
+                            <div class="text-xs text-emerald-600">Proposed: <span id="sim-proposed-discount"></span></div>
+                        </div>
+                        
+                        <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
+                            <div class="text-xs text-emerald-600">EST. PROFIT (30% margin)</div>
+                            <div class="flex items-baseline gap-x-2 mt-1">
+                                <span id="sim-current-profit" class="font-semibold text-xl"></span>
+                                <span id="sim-delta-profit" class="text-xs font-semibold"></span>
+                            </div>
+                            <div class="text-xs text-emerald-600">Proposed: <span id="sim-proposed-profit"></span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 text-[10px] text-slate-500 px-1" id="simulation-notes"></div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <!-- Revenue Agent -->
+    <section id="revenue-agent-view" class="view-panel">
+      <div class="flex items-center justify-between mb-5">
+        <div><p class="text-xs uppercase tracking-[.2em] text-emerald-600">Agentic Commerce</p><h2 class="font-display text-3xl mt-1">Revenue Agent</h2></div>
+        <div class="flex gap-2">
+          <button onclick="loadCausalDemo()" class="bg-slate-900 text-white rounded-xl px-5 py-3 text-sm font-medium">Load Demo Dataset</button>
+          <button onclick="runSystemCheck()" class="border border-slate-200 rounded-xl px-5 py-3 text-sm">Run System Check</button>
+        </div>
+      </div>
+
+      <div id="ra-status" class="mb-4 rounded-2xl bg-white border border-slate-200 p-4 text-sm text-slate-600">No active causal dataset. Click <strong>Load Demo Dataset</strong> to start the agent workflow.</div>
+
+      <div class="grid lg:grid-cols-3 gap-5">
+        <!-- Brief + Trail -->
+        <div class="lg:col-span-1 space-y-5">
+          <div class="bg-slate-900 text-white rounded-3xl p-6">
+            <p class="text-xs uppercase tracking-[.2em] text-emerald-300">Daily Revenue Intelligence Brief</p>
+            <div id="ra-brief" class="mt-4 text-sm text-slate-300"><span class="text-slate-500">Awaiting data…</span></div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-3xl p-6">
+            <p class="text-xs uppercase tracking-widest text-slate-400">Agent Activity Trail</p>
+            <div id="ra-trail" class="mt-4 space-y-2 text-sm"></div>
+          </div>
+        </div>
+
+        <!-- Opportunities -->
+        <div class="lg:col-span-2">
+          <div class="bg-white border border-slate-200 rounded-3xl p-6">
+            <div class="flex items-center justify-between">
+              <div><p class="text-xs uppercase tracking-widest text-slate-400">Recovery Opportunities</p><h3 class="font-display text-2xl mt-1">Ranked by impact</h3></div>
+              <span id="ra-reliability" class="px-3 py-1 rounded-full bg-slate-100 text-xs text-slate-500">Reliability: —</span>
+            </div>
+            <div id="ra-opportunities" class="mt-5 space-y-3"></div>
+          </div>
+
+          <!-- Recommendation + Simulate + Deploy -->
+          <div id="ra-recommendation" class="mt-5 bg-white border border-slate-200 rounded-3xl p-6 hidden"></div>
+
+          <!-- Chat -->
+          <div class="mt-5 bg-white border border-slate-200 rounded-3xl p-6">
+            <p class="text-xs uppercase tracking-widest text-slate-400">Agent Workspace</p>
+            <div id="ra-chat" class="mt-4 min-h-[100px] text-sm text-slate-600"></div>
+            <div class="flex gap-2 mt-3">
+              <input id="ra-question" class="flex-1 border border-slate-200 rounded-xl px-4 py-3 text-sm" placeholder="Which channel leaks the most?">
+              <button onclick="askRevenueAgent()" class="bg-slate-900 text-white rounded-xl px-5 text-sm">Ask</button>
+            </div>
+            <div class="flex flex-wrap gap-2 mt-3">
+              <button onclick="setAgentQuestion('Which channel leaks the most?')" class="text-xs border border-slate-200 rounded-lg px-3 py-1.5">Which channel leaks the most?</button>
+              <button onclick="setAgentQuestion('What should we do about it?')" class="text-xs border border-slate-200 rounded-lg px-3 py-1.5">What should we do about it?</button>
+              <button onclick="setAgentQuestion('How much margin can we recover and why?')" class="text-xs border border-slate-200 rounded-lg px-3 py-1.5">How much margin can we recover?</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Agent Audit -->
+    <section id="audit-view" class="view-panel">
+        <div class="grid lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-slate-900 text-white rounded-3xl p-7" id="tour-agent">
+                <div class="flex items-center justify-between"><div><p class="text-xs uppercase tracking-[.2em] text-emerald-300">Discount Lens Agent</p><h2 class="font-display text-3xl mt-2">Investigation trail</h2></div><span class="px-3 py-1 rounded-full bg-emerald-400/15 text-emerald-300 text-xs">Analysis complete</span></div>
+                <div id="agent-steps" class="mt-7 space-y-3"></div>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-3xl p-7"><p class="text-xs uppercase tracking-widest text-slate-400">Agent insights</p><div id="agent-insights" class="mt-5 space-y-4"></div></div>
+        </div>
+        <div class="mt-6 bg-white border border-slate-200 rounded-3xl p-7"><div class="flex items-center justify-between"><div><p class="text-xs uppercase tracking-widest text-slate-400">Ask the investigator</p><h3 class="font-display text-2xl mt-1">What should we do next?</h3></div><button class="text-xs text-slate-500 underline" onclick="showView('overview')">Back to command center</button></div><div id="agent-output-audit" class="mt-5 min-h-[80px] text-sm text-slate-600"></div><div class="flex gap-2 mt-4"><input id="agent-question-audit" class="flex-1 border border-slate-200 rounded-xl px-4 py-3 text-sm" placeholder="Why are discounts leaking?"><button onclick="askAgentFromAudit()" class="bg-slate-900 text-white rounded-xl px-5 text-sm">Ask agent</button></div></div>
+    </section>
+
+    <!-- Customer Segments -->
+    <section id="segments-view" class="view-panel">
+        <div class="bg-white border border-slate-200 rounded-3xl p-7" id="tour-segments"><div class="flex items-start justify-between"><div><p class="text-xs uppercase tracking-widest text-slate-400">Customer Lens</p><h2 class="font-display text-3xl mt-1">Who actually needs an incentive?</h2></div><span class="text-xs text-slate-500">Click a segment to drill in</span></div><div id="segment-cards" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-7"></div><div id="segment-detail" class="mt-6 hidden border-t border-slate-100 pt-6"></div></div>
+    </section>
+
+    <!-- Leakage Intelligence -->
+    <section id="leakage-view" class="view-panel">
+        <div class="bg-slate-900 text-white rounded-3xl p-7" id="tour-leakage"><p class="text-xs uppercase tracking-[.2em] text-rose-300">Revenue leakage intelligence</p><h2 class="font-display text-4xl mt-2">Find where margin disappears.</h2><p class="text-slate-300 mt-2 max-w-2xl">Discount leakage is the primary signal. Other lenses activate only when your data supports them.</p><div id="leakage-grid" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-7"></div></div>
+    </section>
+
+    <!-- Data Explorer -->
+    <section id="explorer-view" class="view-panel">
+        <div class="flex items-end justify-between mb-5"><div><p class="text-xs uppercase tracking-widest text-slate-400">Data Explorer</p><h2 class="font-display text-3xl">What the agent found in your file</h2></div><button onclick="window.open('/dataset','_blank','noopener,noreferrer')" class="px-4 py-2 border border-slate-200 rounded-xl text-sm hover:bg-white">Open full dataset ↗</button></div>
+        <div id="explorer-stats" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div><div class="grid lg:grid-cols-2 gap-6 mt-6"><div class="bg-white border border-slate-200 rounded-3xl p-6"><h3 class="font-semibold">Detected fields</h3><div id="explorer-mappings" class="mt-4 space-y-2"></div></div><div class="bg-white border border-slate-200 rounded-3xl p-6"><h3 class="font-semibold">Data quality</h3><div id="explorer-quality" class="mt-4 space-y-2"></div></div></div><div class="mt-6 bg-white border border-slate-200 rounded-3xl p-6 overflow-x-auto"><h3 class="font-semibold mb-4">Raw preview</h3><table class="w-full text-xs"><thead id="raw-head"></thead><tbody id="raw-body"></tbody></table></div>
+    </section>
+
+    <!-- Data Audit -->
+    <section id="audit-data-view" class="view-panel"><div class="bg-white border border-slate-200 rounded-3xl p-7"><p class="text-xs uppercase tracking-widest text-slate-400">Dataset understanding</p><h2 class="font-display text-3xl mt-1">Discount Lens data audit</h2><div id="audit-summary" class="mt-6"></div><div id="audit-capabilities" class="grid md:grid-cols-2 lg:grid-cols-3 gap-3 mt-6"></div><div class="mt-6 border-t border-slate-100 pt-5"><div class="flex items-center justify-between"><h3 class="font-semibold">Column mapping</h3><button onclick="applyManualMapping()" class="text-xs bg-slate-900 text-white px-3 py-2 rounded-lg">Apply mappings</button></div><p class="text-xs text-slate-500 mt-1">Automatic mappings are ready to use. Override a field only when you know the business meaning differs.</p><div id="manual-mappings" class="grid md:grid-cols-2 gap-3 mt-4"></div></div><div class="mt-6 border-t border-slate-100 pt-5"><h3 class="font-semibold">Raw columns found</h3><div id="raw-columns" class="flex flex-wrap gap-2 mt-3"></div></div></div></section>
+
+    <!-- Margin Simulator -->
+    <section id="simulator-view" class="view-panel">
+        <div class="bg-white border border-slate-200 rounded-3xl p-7">
+            <div class="flex flex-wrap items-start justify-between gap-4"><div><p class="text-xs uppercase tracking-widest text-slate-400">Margin Simulator</p><h2 class="font-display text-3xl mt-1">What if we targeted hesitation, not everyone?</h2><p class="text-slate-600 mt-2">The policy below is calculated from the active dataset. No figures are prefilled as results.</p></div><span id="sim-status" class="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-500">Ready to simulate</span></div>
+            <div class="mt-8 p-6 bg-slate-50 rounded-2xl"><div class="flex justify-between items-center"><label class="text-xs font-semibold uppercase tracking-widest">Coupon targeting strictness</label><span id="strictness-label" class="text-sm font-semibold">70% · Hesitation only</span></div><input id="simulator-slider" type="range" min="0" max="100" value="70" class="w-full mt-5 accent-slate-900" oninput="syncSimulator(this.value)"><div class="flex justify-between text-xs text-slate-500"><span>Everyone</span><span>High intent excluded</span><span>Hesitation only</span></div></div>
+            <div id="simulator-policy" class="grid md:grid-cols-3 gap-4 mt-6"></div>
+            <div class="flex flex-wrap gap-3 mt-6"><button id="sim-run-button" onclick="runSimulation()" class="bg-slate-900 text-white rounded-xl px-5 py-3 text-sm font-medium">Run policy simulation</button><button onclick="showView('segments')" class="border border-slate-200 rounded-xl px-5 py-3 text-sm">Review classifications</button></div>
+            <div id="sim-empty" class="mt-6 hidden rounded-2xl p-5 bg-amber-50 text-amber-900 text-sm"></div>
+            <div id="sim-error" class="mt-6 hidden rounded-2xl p-5 bg-rose-50 text-rose-900 text-sm"></div>
+            <div id="simulator-results" class="mt-7 hidden border-t border-slate-100 pt-6"><div class="flex items-end justify-between"><div><p class="text-xs uppercase tracking-widest text-emerald-700">Discount Lens policy</p><h3 class="font-display text-2xl mt-1">Expected impact</h3></div><div><div class="text-xs text-slate-500">RECOVERABLE MARGIN</div><div id="sim-recoverable" class="font-display text-3xl text-emerald-700"></div></div></div><div id="simulator-results-grid" class="grid grid-cols-2 lg:grid-cols-5 gap-4 mt-6"></div><p id="simulator-notes" class="mt-5 text-xs text-slate-500"></p></div>
+        </div>
+    </section>
+
+    <!-- Recommended datasets -->
+    <section id="datasets-view" class="view-panel"><div class="bg-white border border-slate-200 rounded-3xl p-7"><p class="text-xs uppercase tracking-widest text-slate-400">Data guidance</p><h2 class="font-display text-3xl mt-1">Recommended datasets</h2><p class="text-slate-600 mt-2">References for exploring the product. Discount Lens never downloads or imports these datasets automatically.</p><div class="grid lg:grid-cols-3 gap-5 mt-7"><article class="border border-slate-200 rounded-2xl p-5"><div class="text-xs font-medium text-blue-700">UCI · 12,330 sessions</div><h3 class="font-semibold text-lg mt-2">Online Shoppers Purchasing Intention</h3><p class="text-sm text-slate-600 mt-2">Browsing behavior and purchase outcome make this excellent for purchase-intent and behavioral opportunity analysis.</p><div class="mt-4 text-xs"><p><strong>Available:</strong> page values, visit duration, traffic type, returning visitor, revenue outcome.</p><p class="mt-2 text-amber-800"><strong>Missing:</strong> discount/base/final-price fields. Discount-leakage and exact spend need pricing or promotion enrichment.</p></div></article><article class="border border-slate-200 rounded-2xl p-5"><div class="text-xs font-medium text-blue-700">UCI · ~1.07M records</div><h3 class="font-semibold text-lg mt-2">Online Retail II</h3><p class="text-sm text-slate-600 mt-2">Retail transactions with customer, product, quantity, unit price, invoice date, and country support product and customer analysis.</p><div class="mt-4 text-xs"><p><strong>Available:</strong> customer, product, quantity, price, date, country.</p><p class="mt-2 text-amber-800"><strong>Needs enrichment:</strong> explicit discount/treatment and pre-discount price for causal discount leakage; margin for recovery estimates.</p></div></article><article class="border border-slate-200 rounded-2xl p-5"><div class="text-xs font-medium text-emerald-700">Closest workflow fit · 25,000 records</div><h3 class="font-semibold text-lg mt-2">Indian E-Commerce Customer Behavior &amp; Purchase</h3><p class="text-sm text-slate-600 mt-2">Session behavior, cart activity, purchase, pricing, and discount information closely match the Discount Lens workflow.</p><div class="mt-4 text-xs"><p><strong>Supports:</strong> intent segmentation, exposure analysis, discount spend, simulation, and policy recommendations.</p><p class="mt-2 text-slate-600"><strong>Check before upload:</strong> use profit/margin when available for a reliable margin-recovery estimate.</p></div></article></div></div></section>
+
+    <!-- First-time guided demo -->
+    <section id="welcome-view" class="view-panel"><div class="bg-slate-900 text-white rounded-3xl p-10 text-center"><p class="text-emerald-300 text-xs uppercase tracking-[.25em]">Try Discount Lens</p><h2 class="font-display text-5xl mt-4">See the discounts that were never needed.</h2><p class="text-slate-300 max-w-xl mx-auto mt-4">Launch the interactive demo to let the agent inspect data, find leakage, and simulate a smarter policy.</p><button onclick="launchDemo()" class="mt-8 bg-white text-slate-900 px-6 py-3 rounded-xl font-semibold">Launch Interactive Demo</button><button onclick="showView('overview')" class="mt-8 ml-3 border border-white/30 px-6 py-3 rounded-xl">Explore overview</button></div></section>
+
+    <!-- Product tour -->
+    <div id="tour-overlay" class="hidden fixed inset-0 z-[100] tour-backdrop p-6"><div class="max-w-lg mx-auto mt-[18vh] bg-white rounded-3xl p-7 tour-card"><div class="flex justify-between"><span id="tour-step-label" class="text-xs uppercase tracking-widest text-slate-400"></span><button onclick="skipTour()" class="text-sm text-slate-400">Skip tour</button></div><h3 id="tour-title" class="font-display text-3xl mt-4"></h3><p id="tour-copy" class="text-slate-600 mt-3 leading-relaxed"></p><div class="flex justify-between mt-7"><button onclick="tourBack()" class="px-4 py-2 border border-slate-200 rounded-xl text-sm">Back</button><button onclick="tourNext()" class="px-5 py-2 bg-slate-900 text-white rounded-xl text-sm">Next</button></div></div></div>
+
+    <!-- Reusable issue component -->
+    <div id="issue-modal" class="hidden fixed inset-0 z-[110] bg-slate-900/50 p-6"><div class="max-w-md mx-auto mt-[15vh] bg-white rounded-3xl p-7"><div class="flex items-start gap-3"><div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 grid place-items-center">!</div><div><p class="text-xs uppercase tracking-widest text-amber-700">Data issue</p><h3 id="issue-title" class="font-display text-2xl mt-1"></h3></div></div><p id="issue-message" class="text-sm text-slate-600 mt-4"></p><div id="issue-detected" class="text-xs bg-slate-50 rounded-xl p-3 mt-4"></div><div class="flex flex-wrap gap-2 mt-6"><button onclick="closeIssue(); showView('audit-data')" class="border border-slate-200 rounded-xl px-4 py-2 text-sm">Map a column</button><button onclick="document.getElementById('csv-upload').click(); closeIssue()" class="bg-slate-900 text-white rounded-xl px-4 py-2 text-sm">Upload another CSV</button><button onclick="loadSampleData(); closeIssue()" class="border border-slate-200 rounded-xl px-4 py-2 text-sm">Use sample data</button></div></div></div>
+
+    <footer class="max-w-7xl mx-auto px-6 pb-8 text-[10px] text-slate-400 flex items-center justify-between">
+        <div>DiscountLens MVP — Built for detecting hidden discount leakage</div>
+        <div class="font-mono">Data is synthetic for demo purposes</div>
+    </footer>
+
+    <script>
+        // Global state
+        let currentAnalysis = null;
+        let segmentPieChart = null;
+        let behaviorChart = null;
+        
+        // Tailwind script
+        function initTailwind() {
+            document.documentElement.style.setProperty('--accent', '#0f172a');
+        }
+        
+        // Format currency
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', { 
+                style: 'currency', 
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+        
+        function formatNumber(num) {
+            return new Intl.NumberFormat('en-US').format(Math.round(num));
+        }
+        
+        // Load sample data from backend
+        async function loadSampleData() {
+            showLoading('Loading the demo investigation…');
+            try {
+                const res = await fetch('/api/sample-data');
+                const data = await res.json();
+                if (!res.ok || data.error) throw new Error(data.error || 'Sample data could not be loaded');
+                currentAnalysis = data;
+                window.currentAnalysisData = data;
+                renderAll(data);
+                await loadExtendedViews();
+                showView('overview');
+            } catch (e) {
+                showIssue('We could not load the sample dataset', 'The demo data is temporarily unavailable. You can retry or upload your own CSV.', 'Sample endpoint did not return a usable analysis.');
+            } finally { hideLoading(); }
+        }
+
+        // Inspect then analyze an uploaded CSV. This keeps schema understanding visible.
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const formData = new FormData(); formData.append('file', file);
+            showLoading('Discount Lens is understanding your data…');
+            try {
+                const inspectRes = await fetch('/api/csv/inspect', { method: 'POST', body: formData });
+                const inspected = await inspectRes.json();
+                if (!inspectRes.ok || inspected.error) throw new Error(inspected.error || 'The CSV could not be inspected');
+                renderAudit(inspected.schema, inspected);
+                const analyzeRes = await fetch('/api/analyze', { method: 'POST' });
+                const data = await analyzeRes.json();
+                if (!analyzeRes.ok || data.error) throw new Error(data.error || 'Analysis could not be completed');
+                currentAnalysis = data; window.currentAnalysisData = data;
+                renderAll(data); await loadExtendedViews(); showView('audit-data');
+            } catch (e) {
+                showIssue('We could not understand this CSV', 'The file was received, but Discount Lens could not turn it into a usable analysis. Check the audit details or try another file.', e.message && !/missing|invalid|could not/i.test(e.message) ? 'The file did not return a usable response.' : 'Some required analysis signals may be unavailable.');
+            } finally { hideLoading(); event.target.value = ''; }
+        }
+        
+        // Main render function
+        function renderAll(analysis) {
+            if (!analysis || !analysis.summary) {
+                console.error('Invalid analysis data');
+                return;
+            }
+            
+            const s = analysis.summary;
+            
+            // Header info
+            document.getElementById('analyzed-at').textContent = new Date(analysis.metadata.analyzed_at).toLocaleDateString();
+            document.getElementById('customer-count').textContent = formatNumber(analysis.metadata.total_customers);
+            document.getElementById('transaction-count').textContent = formatNumber(s.total_orders);
+            
+            // Metrics
+            document.getElementById('metric-revenue').textContent = formatCurrency(s.total_revenue);
+            document.getElementById('metric-discounts').textContent = formatCurrency(s.total_discounts_given);
+            document.getElementById('metric-discount-pct').textContent = ((s.total_discounts_given / s.total_revenue) * 100).toFixed(1);
+            document.getElementById('metric-leakage').textContent = formatCurrency(s.estimated_margin_leakage);
+            document.getElementById('metric-leakage-tx').textContent = formatNumber(s.leakage_transactions);
+            document.getElementById('metric-aov').textContent = formatCurrency(s.avg_order_value);
+            document.getElementById('metric-opportunity').textContent = formatCurrency(s.opportunity_cost);
+            document.getElementById('metric-orders').textContent = formatNumber(s.total_orders);
+            
+            // Segments
+            renderSegments(analysis);
+            
+            // Customer behavior chart
+            renderBehaviorChart(analysis.discount_by_segment || {});
+
+            // Leakage sources
+            renderLeakageSources(analysis.leakage_sources || []);
+            
+            // Evidence table
+            renderEvidenceTable(analysis.evidence || []);
+            
+            // Discount effectiveness
+            renderDiscountEffectiveness(analysis.discount_by_segment || {});
+            
+            // Quick insight
+            document.getElementById('quick-insight').innerHTML = 
+                `Sure Things are being discounted at <strong>${((analysis.discount_by_segment?.['Sure Thing']?.discount_rate || 0) * 100).toFixed(0)}%</strong> rate despite 90%+ organic conversion.`;
+            
+            // Reset simulation results
+            document.getElementById('simulation-results').classList.add('hidden');
+            
+            // Store for agent/simulator
+            window.currentAnalysisData = analysis;
+        }
+        
+        function renderBehaviorChart(bySegment) {
+            const wrap = document.getElementById('behavior-chart-wrap');
+            const empty = document.getElementById('behavior-chart-empty');
+            const summary = document.getElementById('behavior-chart-summary');
+            const entries = Object.entries(bySegment || {}).filter(([, value]) => value && Number.isFinite(Number(value.discount_rate)));
+
+            if (!entries.length || typeof Chart === 'undefined') {
+                wrap.classList.add('hidden');
+                empty.classList.remove('hidden');
+                summary.innerHTML = '';
+                if (behaviorChart) { behaviorChart.destroy(); behaviorChart = null; }
+                return;
+            }
+
+            wrap.classList.remove('hidden');
+            empty.classList.add('hidden');
+            const labels = entries.map(([segment]) => segment);
+            const exposure = entries.map(([, value]) => Number(value.discount_rate || 0) * 100);
+            const depth = entries.map(([, value]) => Number(value.avg_discount || 0) * 100);
+            const colors = ['#2563eb', '#059669', '#e11d48', '#d97706', '#7c3aed'];
+
+            if (behaviorChart) behaviorChart.destroy();
+            behaviorChart = new Chart(document.getElementById('behavior-chart'), {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'Discount exposure', data: exposure, backgroundColor: colors.map(c => c + 'cc'), borderRadius: 7 },
+                        { label: 'Average discount depth', data: depth, backgroundColor: '#cbd5e1', borderRadius: 7 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } } },
+                        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%` } }
+                    },
+                    scales: { y: { beginAtZero: true, max: 100, ticks: { callback: value => value + '%', font: { size: 10 } }, grid: { color: '#f1f5f9' } }, x: { grid: { display: false }, ticks: { font: { size: 10 } } } }
+                }
+            });
+
+            const highest = entries.reduce((best, entry) => entry[1].discount_rate > best[1].discount_rate ? entry : best);
+            const mostProtected = entries.reduce((best, entry) => entry[1].discount_rate < best[1].discount_rate ? entry : best);
+            summary.innerHTML = `
+                <div class="rounded-xl bg-slate-50 p-3"><div class="text-slate-400">HIGHEST EXPOSURE</div><div class="font-semibold mt-1">${highest[0]} · ${(highest[1].discount_rate * 100).toFixed(0)}%</div></div>
+                <div class="rounded-xl bg-emerald-50 p-3"><div class="text-emerald-700">LOWEST EXPOSURE</div><div class="font-semibold mt-1">${mostProtected[0]} · ${(mostProtected[1].discount_rate * 100).toFixed(0)}%</div></div>`;
+        }
+
+        function renderLeakageSources(sources) {
+            const container = document.getElementById('leakage-sources');
+            container.innerHTML = '';
+            
+            if (!sources.length) {
+                container.innerHTML = '<div class="text-sm text-slate-400">No leakage sources detected in current data.</div>';
+                document.getElementById('leakage-count-badge').textContent = '0 sources';
+                return;
+            }
+            
+            document.getElementById('leakage-count-badge').textContent = `${sources.length} sources`;
+            
+            sources.slice(0, 5).forEach(src => {
+                const div = document.createElement('div');
+                div.className = 'flex items-start justify-between bg-red-50/60 border border-red-100 px-3 py-2 rounded-2xl text-xs';
+                div.innerHTML = `
+                    <div>
+                        <div class="font-medium text-red-800">${src.source}</div>
+                        <div class="text-red-600">${src.evidence}</div>
+                    </div>
+                    <div class="text-right font-mono">
+                        <div class="font-semibold text-red-700">${formatCurrency(src.leakage)}</div>
+                        <div class="text-[10px] text-red-500">${src.transactions} tx</div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+        
+        function renderEvidenceTable(evidence) {
+            const tbody = document.getElementById('evidence-table');
+            tbody.innerHTML = '';
+            
+            if (!evidence.length) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="7" class="px-6 py-8 text-center text-sm text-slate-400">No leakage evidence available.</td>`;
+                tbody.appendChild(tr);
+                return;
+            }
+            
+            evidence.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = 'leakage-row';
+                
+                const segmentClass = row.customer_type === 'Sure Thing' ? 'sure-thing' : 
+                                   row.customer_type === 'Persuadable' ? 'persuadable' : 
+                                   row.customer_type === 'Price Warrior' ? 'price-warrior' : 'lost-cause';
+                
+                tr.innerHTML = `
+                    <td class="px-6 py-3 font-mono text-xs">${row.transaction_id}</td>
+                    <td class="px-4 py-3 font-medium">${row.customer_id}</td>
+                    <td class="px-4 py-3">
+                        <span class="segment-pill ${segmentClass}">${row.customer_type}</span>
+                    </td>
+                    <td class="px-4 py-3 text-right font-medium">${formatCurrency(row.base_value)}</td>
+                    <td class="px-4 py-3 text-right">
+                        <span class="font-semibold text-red-600">-${formatCurrency(row.discount_amount)}</span>
+                    </td>
+                    <td class="px-4 py-3 text-xs">${row.channel}</td>
+                    <td class="px-6 py-3 text-xs text-slate-600 max-w-[320px]">${row.reason}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        function renderDiscountEffectiveness(bySegment) {
+            const container = document.getElementById('discount-effectiveness');
+            container.innerHTML = '';
+            
+            Object.keys(bySegment).forEach(seg => {
+                const s = bySegment[seg];
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-between bg-slate-50 px-3 py-2 rounded-2xl text-sm';
+                
+                const discRate = (s.discount_rate * 100).toFixed(0);
+                
+                div.innerHTML = `
+                    <div class="flex items-center gap-x-2">
+                        <span class="segment-pill ${seg === 'Sure Thing' ? 'sure-thing' : seg === 'Persuadable' ? 'persuadable' : seg === 'Price Warrior' ? 'price-warrior' : 'lost-cause'}">${seg}</span>
+                        <span class="text-xs text-slate-500">${s.orders} orders</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="font-semibold">${discRate}%</span> 
+                        <span class="text-xs text-slate-400">discounted</span>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+        
+        // AI Agent
+        async function askAgent() {
+            const input = document.getElementById('agent-question');
+            const question = input.value.trim();
+            if (!question || !window.currentAnalysisData) return;
+            
+            await sendAgentQuestion(question);
+            input.value = '';
+        }
+        
+        function askAgentExample(question) {
+            if (!window.currentAnalysisData) {
+                loadSampleData().then(() => {
+                    sendAgentQuestion(question);
+                });
+            } else {
+                sendAgentQuestion(question);
+            }
+        }
+        
+        async function sendAgentQuestion(question) {
+            const responseEl = document.getElementById('agent-response');
+            responseEl.innerHTML = `
+                <div class="flex items-center gap-x-2 text-xs text-slate-400">
+                    <i class="fa-solid fa-spinner fa-spin"></i> 
+                    <span>Investigating...</span>
+                </div>
+            `;
+            
+            try {
+                const res = await fetch('/api/agent/investigate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        question: question,
+                        analysisData: window.currentAnalysisData
+                    })
+                });
+                
+                const inv = await res.json();
+                
+                if (inv.error) {
+                    responseEl.innerHTML = `<div class="text-red-600 text-sm">${inv.error}</div>`;
+                    return;
+                }
+                
+                let html = `<div class="agent-message">`;
+                html += `<div class="font-semibold text-sm mb-1">${inv.title}</div>`;
+                html += `<div class="text-xs mb-2 text-slate-600">${inv.executive_summary}</div>`;
+                
+                if (inv.findings && inv.findings.length) {
+                    html += `<ul class="text-xs space-y-1 mb-2">`;
+                    inv.findings.slice(0, 3).forEach(f => {
+                        html += `<li class="flex gap-x-1.5"><span class="text-emerald-500">→</span> <span>${f}</span></li>`;
+                    });
+                    html += `</ul>`;
+                }
+                
+                if (inv.recommended_actions && inv.recommended_actions.length) {
+                    html += `<div class="text-xs"><span class="font-medium">Recommended:</span> ${inv.recommended_actions[0]}</div>`;
+                }
+                
+                if (inv.financial_impact && inv.financial_impact !== 'N/A') {
+                    html += `<div class="mt-2 text-xs font-semibold text-emerald-700">${inv.financial_impact}</div>`;
+                }
+                
+                html += `</div>`;
+                responseEl.innerHTML = html;
+                
+            } catch (e) {
+                responseEl.innerHTML = `<div class="text-red-600 text-sm">Investigation failed. Is the backend running?</div>`;
+                console.error(e);
+            }
+        }
+        
+        // Policy Simulation
+        function policyFromStrictness(value) {
+            const strictness = Number(value) / 100;
+            return {
+                sure_thing_discount_cap: Number((0.25 * (1 - strictness)).toFixed(2)),
+                persuadable_max: Number((0.20 - 0.05 * strictness).toFixed(2)),
+                price_warrior_max: Number((0.25 - 0.15 * strictness).toFixed(2))
+            };
+        }
+
+        function proposedTargetCount(policy) {
+            const rows = window.currentAnalysisData?._raw_transactions || [];
+            return rows.filter(row => {
+                const segment = row.customer_type || 'Persuadable';
+                const cap = segment === 'Sure Thing' ? policy.sure_thing_discount_cap : segment === 'Persuadable' ? policy.persuadable_max : segment === 'Price Warrior' ? policy.price_warrior_max : 0.05;
+                return cap > 0 && Number(row.discount_percent || row.discount_percentage || 0) > 0;
+            }).length;
+        }
+
+        function renderSimulation(sim, policy) {
+            const resultsEl = document.getElementById('simulation-results');
+            if (resultsEl) {
+                resultsEl.classList.remove('hidden');
+                document.getElementById('sim-current-orders').textContent = formatNumber(sim.current.orders);
+                document.getElementById('sim-current-revenue').textContent = formatCurrency(sim.current.revenue);
+                document.getElementById('sim-current-discount').textContent = formatCurrency(sim.current.discount_cost);
+                document.getElementById('sim-current-profit').textContent = formatCurrency(sim.current.profit);
+                document.getElementById('sim-proposed-orders').textContent = formatNumber(sim.proposed.orders);
+                document.getElementById('sim-proposed-revenue').textContent = formatCurrency(sim.proposed.revenue);
+                document.getElementById('sim-proposed-discount').textContent = formatCurrency(sim.proposed.discount_cost);
+                document.getElementById('sim-proposed-profit').textContent = formatCurrency(sim.proposed.profit);
+                setDelta('sim-delta-orders', sim.deltas.orders_delta);
+                setDelta('sim-delta-revenue', sim.deltas.revenue_delta);
+                setDelta('sim-delta-discount', sim.deltas.discount_delta, true);
+                setDelta('sim-delta-profit', sim.deltas.profit_delta);
+                document.getElementById('simulation-notes').innerHTML = (sim.simulation_notes || []).map(n => `• ${n}`).join('<br>');
+            }
+            const target = proposedTargetCount(policy);
+            document.getElementById('sim-recoverable').textContent = formatCurrency(Math.max(0, sim.deltas.profit_delta || 0));
+            document.getElementById('simulator-results-grid').innerHTML = [
+                ['CUSTOMERS TARGETED', formatNumber(target), 'Eligible discounted customers under this policy'],
+                ['DISCOUNT SPEND', formatCurrency(sim.proposed.discount_cost), `${formatCurrency(Math.abs(sim.deltas.discount_delta))} lower than current`],
+                ['EXPECTED REVENUE', formatCurrency(sim.proposed.revenue), `${sim.deltas.revenue_delta >= 0 ? '+' : ''}${formatCurrency(sim.deltas.revenue_delta)} vs current`],
+                ['EST. PROFIT', formatCurrency(sim.proposed.profit), `${sim.deltas.profit_delta >= 0 ? '+' : ''}${formatCurrency(sim.deltas.profit_delta)} vs current`],
+                ['INCREMENTAL CONVERSIONS', `${sim.deltas.orders_delta >= 0 ? '+' : ''}${formatNumber(sim.deltas.orders_delta)}`, 'Expected change in converted orders']
+            ].map(([label, value, note]) => `<div class="rounded-2xl border border-slate-200 p-4"><div class="text-[10px] tracking-widest text-slate-400">${label}</div><div class="font-display text-xl mt-2">${value}</div><div class="text-xs text-slate-500 mt-2">${note}</div></div>`).join('');
+            document.getElementById('simulator-notes').textContent = (sim.simulation_notes || []).join(' ');
+        }
+
+        async function runSimulation() {
+            const analysis = window.currentAnalysisData;
+            const empty = document.getElementById('sim-empty');
+            const error = document.getElementById('sim-error');
+            const result = document.getElementById('simulator-results');
+            if (!analysis || !analysis._raw_transactions?.length) {
+                empty.classList.remove('hidden'); empty.textContent = 'Load the sample dataset or upload a CSV before simulating a targeting policy.'; return;
+            }
+            empty.classList.add('hidden'); error.classList.add('hidden'); result.classList.add('hidden');
+            const button = document.getElementById('sim-run-button');
+            button.disabled = true; button.textContent = 'Simulating policy…';
+            document.getElementById('sim-status').textContent = 'Running historical scenario';
+            const currentPolicy = {sure_thing_discount_cap: 0.25, persuadable_max: 0.20, price_warrior_max: 0.25};
+            const slider = document.getElementById('simulator-slider');
+            const proposedPolicy = policyFromStrictness(slider ? slider.value : 70);
+            try {
+                const res = await fetch('/api/simulate', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({currentPolicy, proposedPolicy, analysisData: analysis})});
+                const sim = await res.json();
+                if (!res.ok || sim.error) throw new Error('The active dataset does not contain enough usable transaction data for a policy simulation.');
+                window.lastSimulation = sim; renderSimulation(sim, proposedPolicy);
+                document.getElementById('sim-status').textContent = 'Scenario complete';
+            } catch (e) {
+                error.classList.remove('hidden'); error.textContent = 'Simulation unavailable. ' + (e.message || 'Use a dataset with customer segments and discount exposure, then try again.');
+                document.getElementById('sim-status').textContent = 'Needs more data';
+            } finally { button.disabled = false; button.textContent = 'Run policy simulation'; }
+        }
+        
+        function setDelta(elId, delta, invertGood = false) {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            
+            const good = invertGood ? delta <= 0 : delta >= 0;
+            const prefix = delta > 0 ? '+' : '';
+            
+            el.textContent = `${prefix}${delta}`;
+            el.className = `text-xs font-medium px-1.5 py-0.5 rounded ${good ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`;
+        }
+        
+        function showView(view) {
+            document.querySelectorAll('.view-panel').forEach(el => el.classList.remove('active'));
+            const target = document.getElementById(view + '-view');
+            if (target) target.classList.add('active');
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.toggle('nav-active', el.dataset.view === view));
+            if (view === 'audit') loadAgentAudit();
+            if (view === 'leakage') loadLeakage();
+            if (view === 'explorer') loadExplorer();
+            if (view === 'segments') renderSegments(currentAnalysis);
+        }
+
+        function showLoading(message) {
+            let el = document.getElementById('loading-bar');
+            if (!el) { el = document.createElement('div'); el.id = 'loading-bar'; el.className = 'fixed top-0 left-0 right-0 z-[120] bg-slate-900 text-white text-center text-xs py-2'; document.body.appendChild(el); }
+            el.textContent = message; el.classList.remove('hidden');
+        }
+        function hideLoading() { const el = document.getElementById('loading-bar'); if (el) el.classList.add('hidden'); }
+        function showIssue(title, message, detected) { document.getElementById('issue-title').textContent = title; document.getElementById('issue-message').textContent = message; document.getElementById('issue-detected').textContent = 'Technical detail: ' + detected; document.getElementById('issue-modal').classList.remove('hidden'); }
+        function closeIssue() { document.getElementById('issue-modal').classList.add('hidden'); }
+        function launchDemo() { loadSampleData(); }
+
+        function statusMeta(status) { const s = String(status || 'UNAVAILABLE').toUpperCase(); return s === 'READY' ? ['AVAILABLE', 'status-ready', 'text-emerald-700 bg-emerald-50'] : s === 'ESTIMATED' || s === 'LIMITED' || s === 'NEEDS_DATA' ? ['LIMITED', 'status-limited', 'text-amber-700 bg-amber-50'] : ['UNAVAILABLE', 'status-unavailable', 'text-slate-500 bg-slate-100']; }
+        async function applyManualMapping() { const mappings={}; document.querySelectorAll('.mapping-select').forEach(el=>{if(el.value)mappings[el.dataset.canonical]=el.value;}); showLoading('Applying your column mapping…'); try { const r=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mappings})}); const data=await r.json(); if(!r.ok||data.error) throw new Error(data.error||'Mapping could not be applied'); currentAnalysis=data; window.currentAnalysisData=data; renderAll(data); await loadExtendedViews(); showIssue('Mapping applied','Discount Lens used your selected column meanings and refreshed the analysis.','Your original CSV was not modified.'); } catch(e) { showIssue('We could not apply that mapping','Choose valid columns from the selectors and try again.','The selected mapping did not return a usable analysis.'); } finally { hideLoading(); } }
+
+        function renderAudit(schema, inspected) {
+            const mappings = schema?.mappings || {};
+            const labels = {customer_id:'Customer ID', original_value:'Base / Original Value', final_value:'Final Value', discount_amount:'Discount Amount', discount_percent:'Discount Percent', treatment:'Discount Exposure', coupon_code:'Coupon Code', conversion:'Conversion', profit:'Profit / Margin', dwell_time:'Customer Behavior'};
+            const found = Object.entries(mappings);
+            const missing = ['original_value','final_value','treatment','conversion','profit'].filter(k => !mappings[k] && !['original_value','final_value','treatment'].every(x => mappings[x]));
+            document.getElementById('audit-summary').innerHTML = `<div class="grid md:grid-cols-3 gap-3"><div class="audit-signal bg-slate-50 rounded-2xl p-4"><div class="text-xs text-slate-400">DATASET</div><div class="font-semibold mt-1">${inspected?.filename || 'Uploaded CSV'}</div><div class="text-xs text-slate-500 mt-1">${formatNumber(inspected?.row_count || 0)} rows · ${(inspected?.columns || []).length} columns</div></div><div class="audit-signal bg-emerald-50 rounded-2xl p-4"><div class="text-xs text-emerald-700">DETECTED SIGNALS</div><div class="font-semibold text-emerald-900 mt-1">${found.length} mapped fields</div><div class="text-xs text-emerald-700 mt-1">${schema?.discount_label || 'No discount representation detected'}</div></div><div class="audit-signal bg-slate-50 rounded-2xl p-4"><div class="text-xs text-slate-400">RAW COLUMNS</div><div class="font-semibold mt-1">${(inspected?.columns || []).length}</div><div class="text-xs text-slate-500 mt-1">Your schema stays unchanged</div></div></div>`;
+            document.getElementById('audit-capabilities').innerHTML = Object.entries(schema?.capabilities || {}).map(([key, value]) => { const [label, dot, badge] = statusMeta(value.status); return `<div class="border border-slate-200 rounded-2xl p-4"><div class="flex items-center justify-between"><span class="text-sm font-medium">${key.replaceAll('_',' ')}</span><span class="text-[10px] px-2 py-1 rounded-full ${badge}"><span class="status-dot ${dot} mr-1"></span>${label}</span></div><div class="text-xs text-slate-500 mt-2">${value.reason || value.message || (label === 'AVAILABLE' ? 'Ready to use.' : 'Additional data would strengthen this analysis.')}</div></div>`; }).join('');
+            document.getElementById('raw-columns').innerHTML = (inspected?.columns || schema?.columns || []).map(c => `<span class="font-mono text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded-lg">${c}</span>`).join('');
+            const manualFields = ['customer_id','original_value','final_value','discount_amount','discount_percent','treatment','conversion','profit','dwell_time'];
+            document.getElementById('manual-mappings').innerHTML = manualFields.map(field => `<label class="text-xs text-slate-600"><span class="block mb-1">${labels[field] || field}</span><select data-canonical="${field}" class="mapping-select w-full border border-slate-200 rounded-lg px-2 py-2 bg-white"><option value="">Not mapped</option>${(inspected?.columns || schema?.columns || []).map(c => `<option value="${c}" ${mappings[field]?.column===c?'selected':''}>${c}</option>`).join('')}</select></label>`).join('');
+            const detectedHtml = found.map(([k,v]) => `<div class="flex items-center justify-between border-b border-slate-100 py-2 text-sm"><span class="font-mono text-xs">${v.column}</span><span class="text-slate-500">→ ${labels[k] || k}</span><span class="text-emerald-600">✓</span></div>`).join('');
+            document.getElementById('audit-summary').insertAdjacentHTML('beforeend', `<div class="mt-5 border border-slate-200 rounded-2xl p-4"><h3 class="font-semibold">Dataset understanding</h3><div class="mt-2">${detectedHtml || '<div class="text-sm text-slate-500">No semantic fields were confidently mapped.</div>'}</div></div>`);
+        }
+
+        async function loadExtendedViews() { try { const [a,l,e] = await Promise.all([fetch('/api/agent-audit'), fetch('/api/leakage-intelligence'), fetch('/api/data-explorer')]); window.agentAudit = await a.json(); window.leakageData = await l.json(); window.explorerData = await e.json(); renderAudit(currentAnalysis?.schema || {}, {filename: currentAnalysis?.metadata?.filename, row_count: currentAnalysis?.summary?.total_orders, columns: currentAnalysis?.schema?.columns || []}); renderAgent(window.agentAudit); renderLeakageData(window.leakageData); renderExplorer(window.explorerData); renderSegments(currentAnalysis); } catch(e) { console.error(e); } }
+        async function loadAgentAudit() { if (!window.agentAudit) { const r=await fetch('/api/agent-audit'); window.agentAudit=await r.json(); } renderAgent(window.agentAudit); }
+        function renderAgent(data) { if (!data) return; document.getElementById('agent-steps').innerHTML=(data.activity_log||[]).map((s,i)=>`<div class="flex gap-3 items-start"><span class="text-emerald-300 mt-0.5">✓</span><div><div class="text-sm">${s}</div><div class="text-[10px] text-slate-500 mt-1">stage ${String(i+1).padStart(2,'0')}</div></div></div>`).join(''); document.getElementById('agent-insights').innerHTML=(data.insights||[]).map(i=>`<div class="border-l-2 border-emerald-400 pl-3 text-sm text-slate-700">${i}</div>`).join(''); }
+        async function loadLeakage() { if (!window.leakageData) { const r=await fetch('/api/leakage-intelligence'); window.leakageData=await r.json(); } renderLeakageData(window.leakageData); }
+        function renderLeakageData(data) { if (!data || !document.getElementById('leakage-grid')) return; document.getElementById('leakage-grid').innerHTML=(data.sections||[]).map(s=>{const [label,dot,badge]=statusMeta(s.status); const primary=s.key==='discount'; return `<button onclick="showLeakageDetail('${s.key}')" class="text-left rounded-2xl p-4 ${primary?'bg-rose-500/20 border border-rose-300/40':'bg-white/10 border border-white/10'} hover:bg-white/15"><div class="flex justify-between"><span class="text-sm font-semibold">${s.title}</span><span class="text-[10px] px-2 py-1 rounded-full ${primary?'bg-rose-200 text-rose-800':'bg-white/15 text-slate-200'}">${label}</span></div><div class="text-2xl font-display mt-4">${s.value != null ? formatCurrency(s.value) : '—'}</div><div class="text-xs text-slate-300 mt-2">${s.note || 'Click to inspect the evidence.'}</div></button>`;}).join(''); }
+        function showLeakageDetail(key) { const s=(window.leakageData?.sections||[]).find(x=>x.key===key); if(s) showIssue(s.title, s.note || 'This lens is calculated only when the required data is present.', `Status: ${s.status}.`); }
+
+        async function loadExplorer() { if (!window.explorerData) { const r=await fetch('/api/data-explorer'); window.explorerData=await r.json(); const raw=await fetch('/api/raw-data'); window.rawData=await raw.json(); } renderExplorer(window.explorerData); if(window.rawData) renderRaw(window.rawData); }
+        function renderExplorer(d) { if(!d) return; document.getElementById('explorer-stats').innerHTML=[['ROWS',d.rows],['COLUMNS',d.columns],['MISSING VALUES',d.total_missing],['DUPLICATE ROWS',d.duplicate_rows]].map(x=>`<div class="bg-white border border-slate-200 rounded-2xl p-4"><div class="text-xs text-slate-400">${x[0]}</div><div class="font-display text-2xl mt-2">${formatNumber(x[1])}</div></div>`).join(''); document.getElementById('explorer-mappings').innerHTML=Object.entries(d.mappings||{}).map(([k,v])=>`<div class="flex justify-between text-sm"><span class="text-slate-500">${k.replaceAll('_',' ')}</span><code class="text-xs">${v}</code></div>`).join('')||'<span class="text-sm text-slate-500">No confident mappings found.</span>'; document.getElementById('explorer-quality').innerHTML=Object.entries(d.missing_values||{}).filter(([,v])=>v>0).map(([k,v])=>`<div class="flex justify-between text-sm"><span>${k}</span><span class="text-amber-700">${v} missing</span></div>`).join('')||'<div class="text-sm text-emerald-700">No missing values detected.</div>'; }
+        function renderRaw(d) { document.getElementById('raw-head').innerHTML=`<tr>${(d.columns||[]).map(c=>`<th class="text-left px-3 py-2 border-b">${c}</th>`).join('')}</tr>`; document.getElementById('raw-body').innerHTML=(d.rows||[]).slice(0,10).map(r=>`<tr>${(d.columns||[]).map(c=>`<td class="px-3 py-2 border-b whitespace-nowrap">${r[c] ?? ''}</td>`).join('')}</tr>`).join(''); }
+
+        function renderSegments(a) {
+            const container = document.getElementById('segment-cards');
+            const detail = document.getElementById('segment-detail');
+            if (!container) return;
+            if (!a?.segments?.counts) { container.innerHTML = '<div class="col-span-full rounded-2xl border border-dashed border-slate-300 p-6 text-sm text-slate-500">Customer classification will appear after Discount Lens analyzes a sample or uploaded dataset.</div>'; detail.classList.add('hidden'); return; }
+            const counts=a.segments.counts||{}, revenue=a.segments.revenue||{}, by=a.discount_by_segment||{};
+            const total=Object.values(counts).reduce((sum,n)=>sum+Number(n||0),0);
+            const names=['Persuadable','Sure Thing','Lost Cause','Sleeping Dog','Price Warrior'];
+            const colors={'Persuadable':'blue','Sure Thing':'emerald','Lost Cause':'rose','Sleeping Dog':'amber','Price Warrior':'amber'};
+            const cards=names.filter(n=>counts[n]!=null || n==='Sleeping Dog').map(n=>{
+                const count=counts[n]||0,s=by[n]||{},pct=total?((count/total)*100).toFixed(0):0;
+                const copy=n==='Sure Thing'?'High intent — protect margin before automatically discounting.':n==='Persuadable'?'Hesitation signals make targeted incentives most valuable here.':n==='Lost Cause'?'Low expected return — a coupon is unlikely to rescue this sale.':n==='Sleeping Dog'?'No matching dormant-behavior signal was detected in this dataset.':'High discount reliance — validate incremental value before increasing spend.';
+                return `<button onclick="showSegmentDetail('${n}')" class="segment-button text-left border border-slate-200 rounded-2xl p-5 bg-white"><div class="flex justify-between"><div class="text-xs uppercase tracking-widest text-${colors[n]}-600">${n}</div><span class="text-xs text-slate-400">${pct}%</span></div><div class="font-display text-3xl mt-3">${formatNumber(count)}</div><div class="text-xs text-slate-500 mt-1">classified orders</div><div class="h-1.5 bg-slate-100 rounded-full mt-4 overflow-hidden"><div class="h-full bg-${colors[n]}-500" style="width:${pct}%"></div></div><div class="text-xs mt-4 text-slate-600">${copy}</div></button>`;
+            }).join('');
+            container.innerHTML=cards || '<div class="col-span-full rounded-2xl border border-dashed border-slate-300 p-6 text-sm text-slate-500">No customer segments could be derived from the active dataset.</div>';
+        }
+        function showSegmentDetail(name) { const s=currentAnalysis?.discount_by_segment?.[name]||{}, count=currentAnalysis?.segments?.counts?.[name]||0; const total=Object.values(currentAnalysis?.segments?.counts||{}).reduce((x,y)=>x+Number(y||0),0); const el=document.getElementById('segment-detail'); el.classList.remove('hidden'); el.innerHTML=`<div class="flex justify-between"><div><h3 class="font-display text-2xl">${name}</h3><p class="text-slate-600 mt-1">${name==='Sure Thing'?'High-intent shoppers who may not need a coupon.':name==='Persuadable'?'Hesitant shoppers where targeted value can change behavior.':name==='Lost Cause'?'Customers with low expected return from additional discounts.':'Observed segment from the current analysis.'}</p></div><button onclick="this.parentElement.parentElement.classList.add('hidden')" class="text-slate-400">Close</button></div><div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-5"><div><div class="text-xs text-slate-400">CLASSIFIED</div><div class="font-semibold mt-1">${formatNumber(count)} · ${total?((count/total)*100).toFixed(1):0}%</div></div><div><div class="text-xs text-slate-400">DISCOUNT RATE</div><div class="font-semibold mt-1">${((s.discount_rate||0)*100).toFixed(0)}%</div></div><div><div class="text-xs text-slate-400">REVENUE</div><div class="font-semibold mt-1">${formatCurrency(s.revenue||revenue?.[name]||0)}</div></div><div><div class="text-xs text-slate-400">AVG. DISCOUNT</div><div class="font-semibold mt-1">${((s.avg_discount||0)*100).toFixed(0)}%</div></div></div>`; }
+        function syncSimulator(value) {
+            const strictness = Number(value);
+            const policy = policyFromStrictness(strictness);
+            const label = document.getElementById('strictness-label');
+            const policyEl = document.getElementById('simulator-policy');
+            if (label) label.textContent = `${strictness}% · ${strictness < 35 ? 'Everyone' : strictness < 70 ? 'High intent excluded' : 'Hesitation only'}`;
+            if (policyEl) policyEl.innerHTML = [
+                ['Sure Things', `${Math.round(policy.sure_thing_discount_cap * 100)}% cap`, 'Suppress discounts as intent confidence rises'],
+                ['Persuadables', `${Math.round(policy.persuadable_max * 100)}% cap`, 'Keep a meaningful incentive for hesitation'],
+                ['Price Warriors', `${Math.round(policy.price_warrior_max * 100)}% cap`, 'Protect volume with a controlled offer']
+            ].map(([segment, cap, note]) => `<div class="rounded-2xl border border-slate-200 p-4"><div class="text-xs text-slate-400">${segment}</div><div class="font-display text-xl mt-2">${cap}</div><div class="text-xs text-slate-500 mt-2">${note}</div></div>`).join('');
+        }
+
+        const tourSteps=[['Dataset','Upload transaction data or launch the sample investigation.'],['Agent Audit','Follow every stage as the agent maps, validates, and investigates your data.'],['Customer Segments','See who is likely to buy anyway versus who may need an incentive.'],['Leakage Intelligence','Find discount leakage first, then activate supported product, channel, and promotion lenses.'],['Margin Simulator','Change targeting strictness and compare expected economics.'],['Recommendations','Turn the result into a policy your team can test.']]; let tourIndex=0; function startTour(){tourIndex=0;document.getElementById('tour-overlay').classList.remove('hidden');renderTour();} function renderTour(){const s=tourSteps[tourIndex];document.getElementById('tour-step-label').textContent=`${tourIndex+1} / ${tourSteps.length} · ${s[0]}`;document.getElementById('tour-title').textContent=s[0];document.getElementById('tour-copy').textContent=s[1];} function tourNext(){if(tourIndex<tourSteps.length-1){tourIndex++;renderTour();}else{skipTour();showView('overview');}} function tourBack(){if(tourIndex>0){tourIndex--;renderTour();}} function skipTour(){document.getElementById('tour-overlay').classList.add('hidden');}
+        async function askAgentFromAudit(){const q=document.getElementById('agent-question-audit').value.trim();if(!q)return;const r=await fetch('/api/agent/investigate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,analysisData:currentAnalysis})});const d=await r.json();document.getElementById('agent-output-audit').innerHTML=`<strong>${d.title||'Agent response'}</strong><p class="mt-2">${d.executive_summary||'No response available.'}</p>`;}
+
+        // ============================================================
+        // Revenue Agent — causal demo, brief, trail, opportunities,
+        // recommendation, simulate, optimize, deploy, chat
+        // ============================================================
+        let raState = null;
+        const fc = n => '$' + Number(n||0).toLocaleString('en-US',{maximumFractionDigits:0});
+
+        async function loadCausalDemo() {
+            showLoading('Generating causal demo dataset and running the agent pipeline…');
+            try {
+                const r = await fetch('/api/agent/demo', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rows:2500,seed:42})});
+                raState = await r.json();
+                if (!r.ok || raState.error) throw new Error(raState.error || 'Demo load failed');
+                renderRevenueAgent(raState);
+                showIssue('Revenue Agent active','The agent inspected the dataset, trained a causal model, and ranked recovery opportunities.','Every number is computed from the generated dataset.');
+            } catch (e) {
+                showIssue('Could not start the agent', e.message, 'Check that the backend is running.');
+            } finally { hideLoading(); }
+        }
+
+        function renderRevenueAgent(state) {
+            raState = state;
+            const brief = state.brief || {};
+            const trail = state.trail || [];
+            const opps = state.opportunities || [];
+            const rec = state.recommendation;
+            const model = state.model || {};
+            document.getElementById('ra-status').innerHTML = `<span class="font-medium">${state.dataset?.name||'Dataset'}</span> · ${state.dataset?.rows?.toLocaleString()||0} rows · Mode: <span class="font-medium text-emerald-600">${state.mode||'—'}</span>`;
+            document.getElementById('ra-reliability').textContent = 'Reliability: ' + (model.reliability || '—');
+
+            // Brief
+            const issuesHtml = (brief.issues||[]).map((o,i)=>`<div class="border-t border-white/10 pt-3 mt-3"><div class="flex justify-between"><span class="text-white font-medium">${i+1}. ${o.title||o.dimension}</span><span class="text-emerald-300 font-semibold">${fc(o.leakage)}</span></div><div class="text-xs text-slate-400 mt-1">${o.affected_orders||0} affected orders · recovery ${fc(o.potential_recovery)} · confidence ${o.confidence||'—'}</div></div>`).join('');
+            document.getElementById('ra-brief').innerHTML = `<p class="text-white">${brief.summary||'No brief available.'}</p><p class="mt-2 text-slate-400 text-xs">${brief.next_step||''}</p><p class="mt-2 text-emerald-300 text-xs">Potential recovery: ${fc(brief.potential_recovery)}</p>${issuesHtml}`;
+
+            // Trail
+            const stepColors = {OBSERVE:'text-blue-300',VALIDATE:'text-blue-300',MODEL:'text-emerald-300',CHECK:'text-emerald-300',INVESTIGATE:'text-amber-300',RECOMMEND:'text-amber-300',LIMIT:'text-red-300'};
+            document.getElementById('ra-trail').innerHTML = trail.map(t=>`<div class="flex gap-2"><span class="${stepColors[t.step]||'text-slate-400'} font-mono text-xs">✓</span><span class="text-slate-600">${t.message}</span></div>`).join('');
+
+            // Opportunities
+            const prioBadge = p => p===1?'🔴':p===2?'🟠':'🟡';
+            document.getElementById('ra-opportunities').innerHTML = opps.length ? opps.map(o=>`
+                <div class="border border-slate-200 rounded-2xl p-4">
+                    <div class="flex items-start justify-between">
+                        <div><span class="text-lg">${prioBadge(o.priority)}</span><span class="ml-2 font-semibold">${o.title}</span></div>
+                        <div class="text-right"><div class="font-semibold text-slate-900">${fc(o.leakage)}</div><div class="text-xs text-slate-500">leakage</div></div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3 mt-3 text-xs text-slate-500">
+                        <div><span class="font-semibold text-slate-700">${o.affected_orders||0}</span> affected</div>
+                        <div><span class="font-semibold text-slate-700">${fc(o.potential_recovery)}</span> recovery</div>
+                        <div><span class="font-semibold text-slate-700">${o.confidence||'—'}</span> confidence</div>
+                    </div>
+                    <details class="mt-2 text-xs"><summary class="cursor-pointer text-slate-500">Evidence</summary><div class="mt-2 space-y-1">${(o.evidence||[]).map(e=>`<div class="text-slate-600">${e.transaction_id} · ${e.customer_type} · ${e.channel||''} · ${fc(e.discount_amount_canonical)} discount · lift ${(e.estimated_incremental_lift*100).toFixed(1)}%</div>`).join('')}</div></details>
+                </div>`).join('') : '<p class="text-slate-400 text-sm">No opportunities detected for this dataset.</p>';
+
+            // Recommendation + actions
+            const recEl = document.getElementById('ra-recommendation');
+            if (rec) {
+                recEl.classList.remove('hidden');
+                recEl.innerHTML = `
+                    <p class="text-xs uppercase tracking-widest text-slate-400">Recommended Action</p>
+                    <h3 class="font-display text-xl mt-1">${rec.problem||'Recommendation'}</h3>
+                    <div class="grid md:grid-cols-2 gap-4 mt-4 text-sm">
+                        <div><p class="text-xs text-slate-400">Observed</p><p class="text-slate-700 mt-1">${rec.observed||''}</p></div>
+                        <div><p class="text-xs text-slate-400">Inference</p><p class="text-slate-700 mt-1">${rec.inference||''}</p></div>
+                    </div>
+                    <div class="bg-slate-50 rounded-xl p-4 mt-4 text-sm"><p class="font-medium text-slate-900">${rec.action||''}</p><p class="text-xs text-slate-500 mt-2">Expected impact: ${fc(rec.expected_impact)} · ${rec.affected_orders||0} orders · confidence ${rec.confidence||'—'}</p></div>
+                    <details class="mt-3 text-xs"><summary class="cursor-pointer text-slate-500">Why this recommendation?</summary><ul class="mt-2 list-disc list-inside text-slate-600">${(rec.why||[]).map(w=>`<li>${w}</li>`).join('')}</ul></details>
+                    <div class="flex gap-2 mt-5">
+                        <button onclick="simulateRecommendation()" class="bg-slate-900 text-white rounded-xl px-5 py-3 text-sm font-medium">Simulate Policy</button>
+                        <button onclick="findBestPolicy()" class="border border-slate-200 rounded-xl px-5 py-3 text-sm">Find Best Policy</button>
+                        <button onclick="deployRecommendation()" class="border border-emerald-300 text-emerald-700 rounded-xl px-5 py-3 text-sm">Deploy Policy</button>
+                    </div>
+                    <div id="ra-simulation" class="mt-5"></div>`;
+            } else {
+                recEl.classList.add('hidden');
+            }
+        }
+
+        async function simulateRecommendation() {
+            const rec = raState?.recommendation;
+            if (!rec) return;
+            showLoading('Simulating policy…');
+            try {
+                const r = await fetch('/api/agent/simulate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({proposedPolicy:rec.proposed_policy,currentPolicy:{sure_thing_discount_cap:.25,persuadable_max:.20,price_sensitive_max:.25}})});
+                const sim = await r.json();
+                if (!r.ok || sim.error) throw new Error(sim.error);
+                renderSimulationResult(sim, 'Recommended policy simulation');
+            } catch(e) { showIssue('Simulation failed', e.message, ''); }
+            finally { hideLoading(); }
+        }
+
+        async function findBestPolicy() {
+            showLoading('Searching for the best policy…');
+            try {
+                const r = await fetch('/api/agent/optimize',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
+                const opt = await r.json();
+                if (!r.ok || opt.error) throw new Error(opt.error);
+                const sim = opt.simulation;
+                renderSimulationResult(sim, `Best policy found (${opt.evaluated} evaluated)`);
+                // store best policy for deployment
+                if (raState) raState._bestPolicy = opt.policy;
+            } catch(e) { showIssue('Optimization failed', e.message, ''); }
+            finally { hideLoading(); }
+        }
+
+        function renderSimulationResult(sim, title) {
+            const c = sim.current||{}, p = sim.proposed||{}, d = sim.deltas||{};
+            const sign = v => (v>=0?'+':'') + fc(v);
+            const dsign = v => (v>=0?'+':'') + fc(v);
+            document.getElementById('ra-simulation').innerHTML = `
+                <div class="border border-slate-200 rounded-2xl p-5">
+                    <p class="text-xs uppercase tracking-widest text-slate-400">${title}</p>
+                    <div class="grid grid-cols-5 gap-3 mt-4 text-sm">
+                        <div class="font-semibold text-slate-400 text-xs">Metric</div><div class="font-semibold text-slate-400 text-xs">Current</div><div class="font-semibold text-slate-400 text-xs">Proposed</div><div class="font-semibold text-slate-400 text-xs">Δ</div><div class="font-semibold text-slate-400 text-xs"></div>
+                        <div>Orders</div><div>${(c.orders||0).toFixed(0)}</div><div>${(p.orders||0).toFixed(0)}</div><div>${sign(d.orders_delta||0)}</div><div></div>
+                        <div>Revenue</div><div>${fc(c.revenue)}</div><div>${fc(p.revenue)}</div><div>${dsign(d.revenue_delta||0)}</div><div class="text-red-500 text-xs">at risk: ${fc(Math.max(0,d.revenue_at_risk||0))}</div>
+                        <div>Discount cost</div><div>${fc(c.discount_cost)}</div><div>${fc(p.discount_cost)}</div><div>${dsign(d.discount_delta||0)}</div><div></div>
+                        <div class="font-semibold">Profit</div><div class="font-semibold">${fc(c.profit)}</div><div class="font-semibold">${fc(p.profit)}</div><div class="font-semibold text-emerald-600">${sign(d.profit_delta||0)}</div><div class="text-emerald-600 text-xs">recovered: ${fc(Math.max(0,d.margin_recovered||0))}</div>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-4">Reliability: ${sim.reliability||'—'}${sim.profit_is_proxy? ' · profit is a proxy estimate':' · profit from uploaded cost/margin data'}</p>
+                </div>`;
+        }
+
+        async function deployRecommendation() {
+            const policy = (raState && raState._bestPolicy) || (raState && raState.recommendation && raState.recommendation.proposed_policy);
+            if (!policy) { showIssue('No policy to deploy','Simulate or find a policy first.',''); return; }
+            showLoading('Deploying policy locally…');
+            try {
+                const r = await fetch('/api/agent/deploy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({policy})});
+                const d = await r.json();
+                if (!r.ok || d.error) throw new Error(d.error);
+                showIssue('✓ POLICY ACTIVE','The recommended discount-targeting policy has been saved as the active policy.','This is a local demo deployment. No external promotion platform was modified.');
+            } catch(e) { showIssue('Deployment failed', e.message, ''); }
+            finally { hideLoading(); }
+        }
+
+        async function askRevenueAgent() {
+            const q = document.getElementById('ra-question').value.trim();
+            if (!q) return;
+            const chatEl = document.getElementById('ra-chat');
+            chatEl.innerHTML += `<div class="mb-3 text-right"><span class="inline-block bg-slate-900 text-white rounded-2xl px-4 py-2 max-w-md">${q}</span></div>`;
+            document.getElementById('ra-question').value = '';
+            try {
+                const r = await fetch('/api/agent/investigate-v2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q})});
+                const d = await r.json();
+                if (!r.ok || d.error) throw new Error(d.error);
+                const ev = (d.evidence||[]).slice(0,3).map(e=>`<div class="text-xs text-slate-500 mt-1">${e.transaction_id} · ${e.customer_type||''} · ${e.channel||''} · ${fc(e.discount_amount_canonical)} · lift ${(e.estimated_incremental_lift*100).toFixed(1)}%</div>`).join('');
+                chatEl.innerHTML += `<div class="mb-3"><div class="inline-block bg-white border border-slate-200 rounded-2xl px-4 py-3 max-w-2xl"><p class="font-medium text-slate-900">${d.finding||''}</p><p class="text-xs text-slate-500 mt-1">${d.inference||''}</p><p class="text-xs mt-1"><strong>Recommendation:</strong> ${d.recommendation?.action||''}</p><p class="text-xs text-slate-400 mt-1">Confidence: ${d.confidence} · Tools: ${(d.tools_used||[]).join(', ')}</p>${ev}</div></div>`;
+                chatEl.scrollTop = chatEl.scrollHeight;
+            } catch(e) {
+                chatEl.innerHTML += `<div class="mb-3 text-red-600 text-sm">${e.message}</div>`;
+            }
+        }
+
+        function setAgentQuestion(q) { document.getElementById('ra-question').value = q; askRevenueAgent(); }
+
+        async function runSystemCheck() {
+            showLoading('Running system checks…');
+            try {
+                const r = await fetch('/api/system-check');
+                const d = await r.json();
+                const rows = (d.checks||[]).map(c=>`<div class="flex items-center gap-2 text-sm"><span>${c.pass?'✅':'❌'}</span><span class="${c.pass?'text-slate-700':'text-red-600'}">${c.name}</span></div>`).join('');
+                showIssue(d.all_passed?'All checks passed':'Some checks failed', `<div class="space-y-1 mt-2">${rows}</div>`, d.all_passed?'The full pipeline is operational.':'Load the demo dataset and run a simulation to complete the checks.');
+            } catch(e) { showIssue('System check failed', e.message, ''); }
+            finally { hideLoading(); }
+        }
+
+        // Initialize
+        async function initializeApp() { initTailwind(); document.querySelector('[data-view="overview"]').classList.add('nav-active'); await loadSampleData(); syncSimulator(70); if(!localStorage.getItem('discountLensTourSeen')){localStorage.setItem('discountLensTourSeen','1');setTimeout(startTour,700);} }
+
+        
+        // Boot
+        window.onload = initializeApp;
+    </script>
+</body>
+</html>
